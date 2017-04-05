@@ -1,16 +1,9 @@
-# Showcase of different features of the DataMetaDOM, the cross-platform Structured Data definition Language
+# Showcase of different features of the DataMetaDOM, for byte array serialization.
+#
+# same stuff as in showCase.dmDom, but types unsupported by the byte ser are taken out.
+# Include removed, as it has been demoed in showCase.dmDom.
 
-# Namespaces can be translated to Java packages, or mapped to database schemas,
-# to address entities such as com:ebay:db:WordEnum etc
-# there can be only one namespace operator in the file and it must be first one
-# all referenced types should be present for the parsing; external references
-# not submitted to the parser can be handled via standard types.
-namespace org.ebay.datameta.examples.basic.show
-
-# include foreign file: .dmDom extension assumed, looked in path defined by the DATAMETA_LIB environment variable,
-# as any Path variable - path elements delimited by File::PATH_SEPARATOR which on Linux and Mac OS is the colon.
-# The included file should not have any version definition, or the version must be exactly the same.
-include caseShow
+namespace org.ebay.datameta.ser.jackson.fasterxml.gen
 
 # The model version
 ver 1.0.0
@@ -92,19 +85,6 @@ bitset DocumentedAndVersionedBitSet numeric[18.3]
    2 => 2222.2222
 end
 
-# Mapping from one type to another, a.k.a. Hash in terms of Ruby, Map in terms of Java/Scala.
-# First type after the record name is the type of the key, the second type is the type of the value.
-# A generator decides which concrete type to generate this into.
-mapping Weights int[4] numeric[8.3]
-   0 => 153.232,
-   1 => 987.0
-end
-
-mapping Heights char[1] float[8]
-   :a => 253.232,
-   :b => 887.0
-end
-
 doc plain
 Going deep to the point A,
 And next to the point B.
@@ -113,16 +93,6 @@ end
 doc java
 Going deep to the point <tt>A</tt>,
 And next to the point <tt>B</tt>.
-end
-
-mapping Depths char[1] float[3]
-   :a => 353.232,
-   :b => 787.0
-end
-
-mapping Lengths string[3] datetime
-   "foo" => DateTime.now,
-   'bar' => DateTime.parse("2012-09-29T23:45:59Z")
 end
 
 # on a Record, prefix + means "required" (not null, mandatory)
@@ -141,7 +111,6 @@ end
 record Embodiment
   +int[4] id
   +string[32] inclusivement =Truly Inclusive!
-  +EmbeddedType mbe =pass this default to the constructor with one param
   identity id
 end
 
@@ -179,15 +148,12 @@ record KitchenSink
 # override default version set on the file
   +int[8] id
   +string[32] context
+  -int[4] fieldName
   +set{string[16]} strings
   +list{EmbeddedType} embeds
   +deque{int[4]} ints
   +set{datetime} times
   +set{IdLess} idLessNess
-  +map{string[32], int[4]} strToInt
-  -map{int[8], EmbeddedType} longToEmb
-  +map{EmbeddedType, string} embToString
-  +map{EmbeddedType, Embodiment} embToEmb
 doc plain
 The string type is a variable string
 end
@@ -202,8 +168,6 @@ end
   -BaseColor color
   +WordedEnum type
   -MultiSetString choices
-  -Weights weights
-  -Heights heights
   +int[4] length =32
   -int[4] bearing
   +int[8] frequency
@@ -222,13 +186,12 @@ end
   +url workPage
   +string homeEmail matches email
   -string mobilePhone matches phone
-  -string thePassageId matches uuid
-  -string theCrossageId matches UUID
   +string homeZip matches /^(\d{5,5})(?:[- ](\d{4,4}))?$/
 # make sure only one instance of the same RegEx is generated per Java class, in future may build
 # a RegEx registry for the whole model; this RegEx is identical to the one above because enclosing slashes are optional
   +string workZip matches ^(\d{5,5})(?:[- ](\d{4,4}))?$
   -string lastFirstName matches /^(\w+),[ ]*(\w+)/
+  +raw[22] bytes
 doc plain
 Reference to another object
 it's up to the concrete parser how it would interpret it
@@ -240,10 +203,6 @@ or embedding it
 end
   -EmbeddedType emb
   +Embodiment embo
-
-# external reference: to another entity defined in a different source file
-# that allows creating/reusing libraries
-  +org.ebay.datameta.examples.basic.incl.ExampleNsRec otherNsRef
 
 # the brackets allow additional hints and options that
 # can be interpreted by a concrete parser any way they want
